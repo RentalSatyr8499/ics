@@ -128,12 +128,24 @@ def generateKeys(bitlength):
 	q = generate_prime(bitlength, 50)
 	e = generate_prime(bitlength, 50)
 	d = pow(e, -1, (p-1)*(q-1))
+	return rsakey(bitlength, e, d, p*q)
 
 
 # Given the passed rsakey object and string, this will perform the RSA
 # encryption. It should return a ciphertext object.
 def encrypt(key, plaintext):
-	pass
+	msg = str(convertFromASCII(plaintext))
+	cipherText = ""
+	currBlock = ""
+	for letter in msg:
+		# if the current block is complete, process it and add it to the cipher text
+		if int(currBlock + letter) >= key.n:
+			cipherText += str(pow(int(currBlock), key.e, key.n)) #memodn
+		# otherwise, add the letter to the current block
+		else:
+			currBlock += letter
+	
+
 
 # Given the provided rsakey object and ciphertext object plaintext, this will
 # perform the RSA decryption. It should return a string.
