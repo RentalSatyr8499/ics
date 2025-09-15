@@ -27,7 +27,7 @@ class ciphertext:
 
 # Whether to print verbose messages.  This is useful for debugging, as it will
 # never be set to true (via the -verbose flag) during grading.
-verbose = False
+verbose = True
 
 # Whether the values of p and q are displayed during key generation.  This is
 # useful for debugging, and it *is* something that we will test during grading.
@@ -128,24 +128,38 @@ def generateKeys(bitlength):
 	q = generate_prime(bitlength, 50)
 	e = generate_prime(bitlength, 50)
 	d = pow(e, -1, (p-1)*(q-1))
+
+	if verbose:
+		print(f"p: {p}\nq: {q}\ne: {e}\nd: {d}")
+
 	return rsakey(bitlength, e, d, p*q)
 
 
 # Given the passed rsakey object and string, this will perform the RSA
 # encryption. It should return a ciphertext object.
 def encrypt(key, plaintext):
-	msg = str(convertFromASCII(plaintext))
-	cipherText = ""
-	currBlock = ""
-	for letter in msg:
-		# if the current block is complete, process it and add it to the cipher text
-		if int(currBlock + letter) >= key.n:
-			cipherText += str(pow(int(currBlock), key.e, key.n)) #memodn
-		# otherwise, add the letter to the current block
-		else:
-			currBlock += letter
-	
+	msg = list(str(convertFromASCII(plaintext)))
+	cipherText = []
 
+	blockSize = key.l-1
+	numBlocks = math.ceil(len(msg)/blockSize)
+
+	for i in range(0, numBlocks):
+		# identify the current block
+		start = i*blockSize
+		end = i*blockSize+blockSize
+		currBlock = int("".join(msg[start:end]))
+		
+		# memodn
+		cipherText.append(pow(currBlock, key.e, key.n))
+
+	if verbose:
+		print(f"encrypted the message \'{plaintext}\' as {cipherText}.")
+
+	return ciphertext(cipherText, byte_size(convertFromASCII(plaintext)), byte_size(cipherText[0]))
+
+def byte_size(num):
+	return (num.bit_length() + 7) // 8
 
 # Given the provided rsakey object and ciphertext object plaintext, this will
 # perform the RSA decryption. It should return a string.
