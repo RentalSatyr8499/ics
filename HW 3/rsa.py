@@ -164,7 +164,14 @@ def byte_size(num):
 # Given the provided rsakey object and ciphertext object plaintext, this will
 # perform the RSA decryption. It should return a string.
 def decrypt(key, cipherText):
-	pass
+	msg = []
+	for block in cipherText.c:
+		msg.append(convertToASCII(pow(block, key.d, key.n)))
+	
+	if verbose:
+		print(f"Decrypted message: {"".join(msg)}")
+
+	return "".join(msg)
 
 # Given the passed rsakey, which will not have a private (d) key, it will
 # determine the private key by attempting to factor n.  It returns a rsakey
