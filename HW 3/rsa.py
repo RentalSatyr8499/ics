@@ -140,7 +140,7 @@ def generateKeys(bitlength):
 def encrypt(key, plaintext):
 	msg = list(str(convertFromASCII(plaintext)))
 	if verbose:
-		print(f"integer representation: {convertFromASCII(plaintext)}\nmsg var: {msg}")
+		print(f"integer representation: {convertFromASCII(plaintext)}")
 
 	cipherText = []
 
@@ -156,19 +156,12 @@ def encrypt(key, plaintext):
 		end = i*blockSize+blockSize
 		currBlock = int("".join(msg[start:end]))
 		
-		if verbose:
-			print(f"encoding {"".join(msg[start:end])}...")
-
 		# memodn
 		cipherText.append(pow(currBlock, key.e, key.n))
 
-	if verbose:
-		print(f"encrypted the message \'{plaintext}\' as {cipherText}.")
-		print(f"there are {len(msg)} digits in the message, and {blockSize} digits per block, giving {numBlocks} blocks.")
-	return ciphertext(cipherText, len(msg), blockSize)
+	if verbose: print(f"cipher text: {cipherText}")
 
-def byte_size(num):
-	return (num.bit_length() + 7) // 8
+	return ciphertext(cipherText, len(msg), blockSize)
 
 # Given the provided rsakey object and ciphertext object plaintext, this will
 # perform the RSA decryption. It should return a string.
@@ -176,26 +169,23 @@ def decrypt(key, cipherText):
 	msg = []
 	blockLength = int(cipherText.b)
 
-	for block in cipherText.c[:-1]:
+	for i, block in enumerate(cipherText.c):
 		leadingZeroes = ""
-		decrypted = pow(block, key.d, key.n)
+		decrypted = str(pow(block, key.d, key.n)) # memodn
 
-		# if the block is shorter than the block length (which is given in bytes)...
-		if len(str(decrypted)) != blockLength:
+		if i == len(cipherText.c) - 1: # how many digits are missing
+			repadding = (int(cipherText.l) % blockLength) - len(decrypted)
+		else:
+			repadding = blockLength-len(decrypted) 
 
-			# add one leading zero for each missing byte
-			leadingZeroes += "".join([str(0) for i in range(0, blockLength-len(str(decrypted)))])
-		msg.append(leadingZeroes + str(decrypted))
-
-	# account for leading zeroes that may be in the last block
-	if (int(cipherText.l) % int(cipherText.b)) != len(str(cipherText.c[-1])):
-		leadingZeroes = "".join([str(0) for i in range(0, (int(cipherText.l) % int(cipherText.b))-len(str(cipherText.c[-1])))])
-		msg.append(leadingZeroes + str(pow(cipherText.c[-1], key.d, key.n)))
-	else:
-		msg.append(str(pow(cipherText.c[-1], key.d, key.n)))
+		if repadding > 0:
+			# add one leading zero for each missing digit
+			leadingZeroes += "".join([str(0) for i in range(0, repadding)])
+		msg.append(leadingZeroes + decrypted)
 		
 	if verbose:
 		print(convertToASCII(int("".join([i for i in msg]))))
+
 	return convertToASCII(int("".join([i for i in msg])))
 
 # Given the passed rsakey, which will not have a private (d) key, it will
