@@ -164,7 +164,7 @@ def encrypt(key, plaintext):
 
 	if verbose:
 		print(f"encrypted the message \'{plaintext}\' as {cipherText}.")
-		print(f"there are {len(msg)/2} bytes in the message, giving {blockSize/2} bytes per block.")
+		print(f"there are {len(plaintext)} bytes in the message, giving {blockSize/2} bytes per block and {numBlocks} blocks.")
 	return ciphertext(cipherText, math.ceil(len(msg)/2), math.ceil(blockSize/2))
 
 def byte_size(num):
