@@ -192,7 +192,18 @@ def decrypt(key, cipherText):
 # determine the private key by attempting to factor n.  It returns a rsakey
 # object.
 def crack(key):
-	pass
+	n = int(key.n)
+	d = None
+	
+	for p in range(3, math.ceil(pow(n, 1/2)), 2):
+		if (n % p) == 0:
+			q = int(n/p)
+			d = pow(int(key.e), -1, (p-1)*(q-1))
+			break
+	
+	if verbose: print(f"cracked (n: {key.n}, {key.e}): {d}")
+
+	return rsakey(key.l, key.e, d, n)
 
 # Given the passed rsakey object and string, it will return a ciphertext object that
 # is the digital signature of the text, signed with the private key.

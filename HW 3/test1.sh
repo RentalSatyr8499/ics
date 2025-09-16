@@ -13,3 +13,10 @@ echo "The quick brown fox jumped over the lazy dog." > message2.txt
 ./rsa.sh -key bob -input encrypted1.txt -output message1b.txt -decrypt
 # 5: are they the same?
 diff message1.txt message1b.txt
+
+# 14: charlie generates an easy-to-crack key
+./rsa.sh -key charlie -keygen 10
+# eve tries to crack alice's key
+./rsa.sh -key charlie -crack
+# 15: is the cracked key the same as the original key?
+diff charlie-cracked-private.key charlie-private.key
