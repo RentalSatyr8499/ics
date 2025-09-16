@@ -157,14 +157,14 @@ def encrypt(key, plaintext):
 		currBlock = int("".join(msg[start:end]))
 		
 		if verbose:
-			print(f"encoding {currBlock}...")
+			print(f"encoding {"".join(msg[start:end])}...")
 
 		# memodn
 		cipherText.append(pow(currBlock, key.e, key.n))
 
 	if verbose:
 		print(f"encrypted the message \'{plaintext}\' as {cipherText}.")
-
+		print(f"there are {len(msg)/2} bytes in the message, giving {blockSize/2} bytes per block.")
 	return ciphertext(cipherText, math.ceil(len(msg)/2), math.ceil(blockSize/2))
 
 def byte_size(num):
@@ -174,17 +174,27 @@ def byte_size(num):
 # perform the RSA decryption. It should return a string.
 def decrypt(key, cipherText):
 	msg = []
-	
+
+	for block in cipherText.c[:-1]:
+		leadingZeroes = ""
+
+		# if the block is shorter than the block length (which is given in bytes)...
+		if len(str(block)) != cipherText.b*2:
+
+			# add one leading zero for each missing byte
+			leadingZeroes += "".join([str(0) for i in range(0, int(cipherText.b*2)-len(str(block)))])
+		msg.append(leadingZeroes + str(pow(block, key.d, key.n)))
+
+	# account for leading zeroes that may be in the last block
+	if (int(cipherText.l) % int(cipherText.b))*2 != len(str(cipherText.c[-1])):
+		leadingZeroes = "".join([str(0) for i in range(0, ((int(cipherText.l) % int(cipherText.b))*2)-len(str(cipherText.c[-1])))])
+		msg.append(leadingZeroes + str(pow(cipherText.c[-1], key.d, key.n)))
+	else:
+		msg.append(str(pow(cipherText.c[-1], key.d, key.n)))
+		
 	if verbose:
-		print(cipherText.c)
-		print(f"Decrypted message to {"".join([str(pow(i, key.d, key.n)) for i in cipherText.c])}.")
-		print(f"to ASCII, that is {convertToASCII(12560317230333136478162409778152386517452770819446337365435292849758418144847518095264328136200998464948263597360128867450973007384065560300417031111882845129948876727819911467604319682265004201031678869434789013311225107873765143914601689942349668970441953942396178004412257227698535)}")
-
-	for block in cipherText.c:
-		msg.append(pow(block, key.d, key.n))
-
-
-	return convertToASCII(int("".join([str(i) for i in msg])))
+		print("".join([i for i in msg]))
+	return convertToASCII(int("".join([i for i in msg])))
 
 # Given the passed rsakey, which will not have a private (d) key, it will
 # determine the private key by attempting to factor n.  It returns a rsakey
