@@ -194,7 +194,7 @@ def decrypt(key, cipherText):
 def crack(key):
 	n = int(key.n)
 	d = None
-	
+
 	for p in range(3, math.ceil(pow(n, 1/2)), 2):
 		if (n % p) == 0:
 			q = int(n/p)
@@ -208,13 +208,16 @@ def crack(key):
 # Given the passed rsakey object and string, it will return a ciphertext object that
 # is the digital signature of the text, signed with the private key.
 def sign(key, plaintext):
-	pass
+	hash = hashlib.sha256(bytes(plaintext,'ascii')).hexdigest()
+	return encrypt(int(key.d), hash)
 
 # Given the passed rsakey object, string, and ciphertext object, this will
 # check the signature; it only returns True (if the signature is valid) or
 # False (if not).
 def checkSign(key,plaintext,signature):
-	pass
+	if plaintext == decrypt(int(key.e), signature):
+		return True
+	return False
 
 
 #----------------------------------------
