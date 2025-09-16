@@ -1,4 +1,9 @@
-def convertFromASCII(text):
+m = 125603172303331
+e = 2191525366458731
+n = 672462727407381601984263762563
+print(f"memodn: {pow(m, e, n)}")
+
+'''def convertFromASCII(text):
 	return int.from_bytes(bytes(text,'ascii'),"big")
 
 def convertToASCII(block):
@@ -14,7 +19,7 @@ c = 1256031723033313647816240977815238651745277081944633736543529284975841814484
 
 print(f"A: {integerReprestation}\nB: {integerReprestation2}\nare they equal: {integerReprestation==integerReprestation2}\nC: {c}")
 print(f"converting integerRepresentation: {convertToASCII(integerReprestation)}")
-print(f"converting integerRepresentation2: {convertToASCII(integerReprestation2)}")
+print(f"converting integerRepresentation2: {convertToASCII(integerReprestation2)}")'''
 
 '''msg = "Two things are infinite: the universe and human stupidity;\nand I'm not sure about the the universe.\nby Albert Einstein\n"
 msg2 = convertFromASCII(msg)
