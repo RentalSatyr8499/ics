@@ -130,7 +130,7 @@ def generateKeys(bitlength):
 	d = pow(e, -1, (p-1)*(q-1))
 
 	if verbose:
-		print(f"p: {p}\nq: {q}\ne: {e}\nd: {d}")
+		print(f"p: {p}\nq: {q}\ne: {e}\nd: {d}\nn: {p*q}")
 
 	return rsakey(bitlength, e, d, p*q)
 
@@ -141,8 +141,11 @@ def encrypt(key, plaintext):
 	msg = list(str(convertFromASCII(plaintext)))
 	cipherText = []
 
-	blockSize = key.l-1
+	blockSize = math.floor(key.l/3.321928)
 	numBlocks = math.ceil(len(msg)/blockSize)
+
+	if verbose:
+		print(f"cutting up the message into {numBlocks} {blockSize} sized blocks.")
 
 	for i in range(0, numBlocks):
 		# identify the current block
@@ -150,6 +153,9 @@ def encrypt(key, plaintext):
 		end = i*blockSize+blockSize
 		currBlock = int("".join(msg[start:end]))
 		
+		if verbose:
+			print(f"encoding {currBlock}...")
+
 		# memodn
 		cipherText.append(pow(currBlock, key.e, key.n))
 

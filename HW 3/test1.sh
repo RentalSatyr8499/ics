@@ -7,8 +7,6 @@ echo "by Albert Einstein" >> message1.txt
 echo "The quick brown fox jumped over the lazy dog." > message2.txt
 # 1: create keys alice-public.key and alice-private.key
 ./rsa.sh -key alice -keygen 50
-# 2: create keys bob-public.key and bob-private.key
-./rsa.sh -key bob -keygen 50
 # 3: alice is going to encrypt a message for bob
 ./rsa.sh -key bob -input message1.txt -output encrypted1.txt -encrypt
 # 4: bob will decrypt the message
