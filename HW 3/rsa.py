@@ -139,13 +139,16 @@ def generateKeys(bitlength):
 # encryption. It should return a ciphertext object.
 def encrypt(key, plaintext):
 	msg = list(str(convertFromASCII(plaintext)))
+	if verbose:
+		print(f"integer representation: {convertFromASCII(plaintext)}\nmsg var: {msg}")
+
 	cipherText = []
 
-	blockSize = math.floor(key.l/3.321928)
+	blockSize = math.floor(key.l/3.321928) # number of digits in each block
 	numBlocks = math.ceil(len(msg)/blockSize)
 
 	if verbose:
-		print(f"cutting up the message into {numBlocks} {blockSize} sized blocks.")
+		print(f"cutting up the message, {plaintext}, into {numBlocks} {blockSize} sized blocks.")
 
 	for i in range(0, numBlocks):
 		# identify the current block
@@ -162,7 +165,7 @@ def encrypt(key, plaintext):
 	if verbose:
 		print(f"encrypted the message \'{plaintext}\' as {cipherText}.")
 
-	return ciphertext(cipherText, byte_size(convertFromASCII(plaintext)), byte_size(cipherText[0]))
+	return ciphertext(cipherText, math.ceil(len(msg)/2), math.ceil(blockSize/2))
 
 def byte_size(num):
 	return (num.bit_length() + 7) // 8
@@ -171,13 +174,17 @@ def byte_size(num):
 # perform the RSA decryption. It should return a string.
 def decrypt(key, cipherText):
 	msg = []
-	for block in cipherText.c:
-		msg.append(convertToASCII(pow(block, key.d, key.n)))
 	
 	if verbose:
-		print(f"Decrypted message: {"".join(msg)}")
+		print(cipherText.c)
+		print(f"Decrypted message to {"".join([str(pow(i, key.d, key.n)) for i in cipherText.c])}.")
+		print(f"to ASCII, that is {convertToASCII(12560317230333136478162409778152386517452770819446337365435292849758418144847518095264328136200998464948263597360128867450973007384065560300417031111882845129948876727819911467604319682265004201031678869434789013311225107873765143914601689942349668970441953942396178004412257227698535)}")
 
-	return "".join(msg)
+	for block in cipherText.c:
+		msg.append(pow(block, key.d, key.n))
+
+
+	return convertToASCII(int("".join([str(i) for i in msg])))
 
 # Given the passed rsakey, which will not have a private (d) key, it will
 # determine the private key by attempting to factor n.  It returns a rsakey
