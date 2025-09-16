@@ -131,7 +131,8 @@ def generateKeys(bitlength):
 
 	if verbose:
 		print(f"p: {p}\nq: {q}\ne: {e}\nd: {d}\nn: {p*q}")
-
+	if showPandQ: print(f"{p}\n{q}")
+		
 	return rsakey(bitlength, e, d, p*q)
 
 
