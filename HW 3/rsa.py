@@ -139,47 +139,39 @@ def generateKeys(bitlength):
 # Given the passed rsakey object and string, this will perform the RSA
 # encryption. It should return a ciphertext object.
 def encrypt(key, plaintext):
-	msg = list(str(convertFromASCII(plaintext)))
+	msg = list(plaintext)
 
 	cipherText = []
-
-	blockSize = math.floor(key.l/3.321928) # number of digits in each block
+	
+	msgSize = key.n.bit_length()
+	blockSize = math.floor((msgSize-1)/8) # number of letters in each block
 	numBlocks = math.ceil(len(msg)/blockSize)
 
 	for i in range(0, numBlocks):
 		# identify the current block
 		start = i*blockSize
 		end = i*blockSize+blockSize
-		currBlock = int("".join(msg[start:end]))
+		currBlock = convertFromASCII("".join(msg[start:end]))
 		
 		# memodn
 		cipherText.append(pow(currBlock, key.e, key.n))
+	
+	if verbose: print(f"encoded \"{plaintext}\" into {numBlocks} blocks of {blockSize} size as {cipherText}.")
 
-
-	return ciphertext(cipherText, len(msg), blockSize)
+	return ciphertext(cipherText, msgSize, blockSize)
 
 # Given the provided rsakey object and ciphertext object plaintext, this will
 # perform the RSA decryption. It should return a string.
 def decrypt(key, cipherText):
-	msg = []
+	msg = ""
 	blockLength = int(cipherText.b)
 
-	for i, block in enumerate(cipherText.c):
-		leadingZeroes = ""
-		decrypted = str(pow(block, key.d, key.n)) # memodn
+	for block in cipherText.c:
+		msg += str(convertToASCII(pow(block, key.d, key.n))) # memodn		
 
-		if i == len(cipherText.c) - 1: # how many digits are missing
-			repadding = (int(cipherText.l) % blockLength) - len(decrypted)
-		else:
-			repadding = blockLength-len(decrypted) 
+	if verbose: print(f"decrypted message as \"{msg}\"")
 
-		if repadding > 0:
-			# add one leading zero for each missing digit
-			leadingZeroes += "".join([str(0) for i in range(0, repadding)])
-		msg.append(leadingZeroes + decrypted)
-		
-
-	return convertToASCII(int("".join([i for i in msg])))
+	return msg
 
 # Given the passed rsakey, which will not have a private (d) key, it will
 # determine the private key by attempting to factor n.  It returns a rsakey

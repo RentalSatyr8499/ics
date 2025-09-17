@@ -12,4 +12,4 @@
 ./rsa.sh -key abe -input encrypted2.txt -output speech2b.txt -decrypt
 diff speech2.txt speech2b.txt
 
-# /bin/rm -f susan*.key abe*.key message*.sign message?b.txt encrypted?.txt message?.txt
+/bin/rm -f susan*.key abe*.key message*.sign message?b.txt encrypted?.txt message?.txt
