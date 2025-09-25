@@ -1,10 +1,19 @@
 #!/usr/bin/python3
 
-import sys, crc
+import sys, hashlib
 verbose = False
 
 def dictionaryAttack(dictionary, passwordHashes, salt):
-	return "Testing dictionary input: " + str(dictionary) + "\n" + str(passwordHashes) + "\n" + str(salt)
+	passwords = {}
+	for word in dictionary: 
+		currHash = hashlib.sha256(str(word + salt).encode()).hexdigest()
+		if currHash in passwordHashes:
+			user = passwordHashes[currHash]
+			passwords[user] = word
+		if len(passwords) == len(passwordHashes):
+			break
+	return passwords
+
 
 def main():
 	global verbose
@@ -24,7 +33,7 @@ def main():
 				input = f.read().strip().split("\n")
 				for j in input:
 					j = j.split(" ")
-					passwordHashes[j[0]] = j[1]
+					passwordHashes[j[1]] = j[0]
 		elif i == 3: # salt
 			salt = sys.argv[i]
 		elif i == 4:
@@ -41,7 +50,8 @@ def main():
 
 	with open("output.txt", "w") as f:
 		result = dictionaryAttack(dictionary, passwordHashes, salt)
-		print(result)
+		for key in result:
+			print(f"password for {key} is: {result[key]}")
 		
 if __name__ == '__main__':
 	main()
