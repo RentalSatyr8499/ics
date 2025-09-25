@@ -21,6 +21,7 @@ def main():
 	dictionary = []
 	passwordHashes = {}
 	salt = ""
+	duplicatePasswords = {}
 
 	i = 1
 	while i < len(sys.argv):
@@ -33,7 +34,15 @@ def main():
 				input = f.read().strip().split("\n")
 				for j in input:
 					j = j.split(" ")
-					passwordHashes[j[1]] = j[0]
+
+					if j[1] in passwordHashes: # there is a duplicate password.
+						if passwordHashes[j[1]] not in duplicatePasswords:
+							duplicatePasswords[passwordHashes[j[1]]] = [j[0]]
+						else:
+							duplicatePasswords[passwordHashes[j[1]]].append(j[0])
+					else:
+						passwordHashes[j[1]] = j[0]
+
 		elif i == 3: # salt
 			salt = sys.argv[i]
 		elif i == 4:
@@ -48,10 +57,19 @@ def main():
 
 		i += 1
 
-	with open("output.txt", "w") as f:
-		result = dictionaryAttack(dictionary, passwordHashes, salt)
-		for key in result:
-			print(f"password for {key} is: {result[key]}")
+
+	result = dictionaryAttack(dictionary, passwordHashes, salt)
+	for key in result:
+		print(f"password for {key} is: {result[key]}")
+
+	if verbose:
+		print(f"result: {result}\nduplicatePasswords: {duplicatePasswords}")
+
+	# account for duplicates
+	if len(duplicatePasswords) != 0:
+		for a in duplicatePasswords:
+			for b in duplicatePasswords[a]:
+				print(f"password for {b} is: {result[a]}")
 		
 if __name__ == '__main__':
 	main()
