@@ -42,7 +42,6 @@ def main():
 							duplicatePasswords[passwordHashes[j[1]]].append(j[0])
 					else:
 						passwordHashes[j[1]] = j[0]
-
 		elif i == 3: # salt
 			salt = sys.argv[i]
 		elif i == 4:
@@ -66,7 +65,8 @@ def main():
 		print(f"result: {result}\nduplicatePasswords: {duplicatePasswords}")
 
 	# account for duplicates
-	if len(duplicatePasswords) != 0:
+	if (len(duplicatePasswords) != 0) and (len(result) != 0):
+		print(duplicatePasswords)
 		for a in duplicatePasswords:
 			for b in duplicatePasswords[a]:
 				print(f"password for {b} is: {result[a]}")
