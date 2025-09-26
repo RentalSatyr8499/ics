@@ -37,8 +37,6 @@ def main():
 		result = checkPassword(currPassHash, oldPassword, salt)
 		if result == "": print("Not found")
 		else: print(f"Found: {result}")
-
-
 		
 if __name__ == '__main__':
 	main()
