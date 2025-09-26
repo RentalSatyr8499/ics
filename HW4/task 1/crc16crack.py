@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, crc
+import sys, crc, hashlib
 verbose = False
 
 def crack(input, desiredHash):
@@ -32,8 +32,13 @@ def main():
 	while i < len(sys.argv):
 
 		if i == 1:
-			with open(sys.argv[i], 'r') as f:
-				input = f.read().strip()
+			if len(sys.argv) == 2:
+				with open(sys.argv[i], 'r') as f:
+					calculator = crc.Calculator(crc.Crc16.MODBUS)
+					print(hex(calculator.checksum(bytes(f.read(), "ascii"))))
+			else:
+				with open(sys.argv[i], 'r') as f:
+					input = f.read()
 		elif i == 2:
 			desiredHash = int(sys.argv[i], 16)
 		elif i == 3:
@@ -48,14 +53,15 @@ def main():
 
 		i += 1
 
-	with open("output.txt", "w") as f:
-		result = crack(input, desiredHash)
-		f.write(result)
+	if len(sys.argv) > 2:
+		with open("output.txt", "w") as f:
+			result = crack(input, desiredHash)
+			f.write(result)
 
-		if verbose:
-			print(f"result: {result}")
-			calculator = crc.Calculator(crc.Crc16.MODBUS)
-			print(f"hash of result: {hex(calculator.checksum(bytes(result, "ascii")))}")
+		# if verbose:
+			# print(f"result: {result}")
+			# calculator = crc.Calculator(crc.Crc16.MODBUS)
+			# print(f"hash of result: {hex(calculator.checksum(bytes(result, "ascii")))}")
 
 		
 if __name__ == '__main__':
