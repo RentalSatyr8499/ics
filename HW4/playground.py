@@ -1,4 +1,4 @@
-a = 0
-while a < 100:
-    print(hex(a))
-    a += 1
+suffix = 32
+while suffix < 1000:
+    print(chr(suffix))
+    suffix += 1
