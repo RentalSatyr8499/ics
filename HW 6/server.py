@@ -21,3 +21,5 @@ async def app(scope, receive, send):
         'type': 'http.response.body',
         'body': b'Hello, world!',
     })
+
+    print(f"HTTP method: {scope['method']}")

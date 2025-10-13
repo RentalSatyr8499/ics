@@ -1,6 +1,6 @@
 # Fuzzer
 
-import args, urllib.request, uvicorn
+import args, urllib.request
 
 debug = False
 
@@ -16,7 +16,10 @@ def fuzz(args):
                 toAdd.append(word + extension)
         words += toAdd
 
-    validURLs = findValidUrls(words, URLTemplate)
+    httpMethod = 'GET'
+    if args.method: httpMethod = args.method.upper()
+
+    validURLs = findValidUrls(words, URLTemplate, httpMethod)
 
     for i in validURLs:
         print(f"{i[0]} {i[1]}")
@@ -30,7 +33,7 @@ def givenBaseURLreturnURLTemplate(baseURL):
     i = baseURL.find("FUZZ")
     return [baseURL[0:i], baseURL[i+4:]]
 
-def findValidUrls(words, URLTemplate):
+def findValidUrls(words, URLTemplate, httpMethod):
     validURLs = []
     for word in words:
         currURL = URLTemplate[0] + word + URLTemplate[1]
@@ -38,7 +41,11 @@ def findValidUrls(words, URLTemplate):
         if debug: print(f"Trying {word}: {currURL}")
 
         try:
-            response = urllib.request.urlopen(currURL)
+            request = urllib.request.Request(currURL)
+            request.get_method = lambda: httpMethod
+            
+            response = urllib.request.urlopen(request)
+
             validURLs.append([response.getcode(), currURL])
         except urllib.error.HTTPError as e:
             pass
