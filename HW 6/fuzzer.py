@@ -2,7 +2,7 @@
 
 import args, urllib.request
 
-debug = False
+debug = True
 
 def fuzz(args):
     """Fuzz a target URL with the command-line arguments specified by ``args``."""
@@ -18,7 +18,7 @@ def fuzz(args):
 
     URLTemplate = createURLTemplate(args.url)
     requestTemplate = createRequestTemplate(args)
-    validURLs = findValidUrls(words, URLTemplate, requestTemplate)
+    validURLs = findValidUrls(words, URLTemplate, requestTemplate, args.match_codes)
 
     for i in validURLs:
         print(f"{i[0]} {i[1]}")
@@ -36,8 +36,9 @@ def createRequestTemplate(args):
     requestTemplate = urllib.request.Request(args.url)
 
     # --methods feature
-    httpMethod = 'GET'
     if args.method: requestTemplate.method = args.method.upper()
+    else: 
+        requestTemplate.method = 'GET'
 
     # --header feature
     if args.headers: 
@@ -46,24 +47,35 @@ def createRequestTemplate(args):
             requestTemplate.add_header(header[0], header[1])
     
     # --data feature
-    if args.data: requestTemplate.data = args.data.encode("utf-8")
+    if args.data: 
+
+        if debug: print(f"Attempting to add {args.data.encode("utf-8")} as data.")
+
+        requestTemplate.data = args.data.encode("utf-8")
+        requestTemplate.add_header('Content-Type', 'text/plain')
+
+    if debug: print(f"The Request object has {requestTemplate.data} as data.")
 
     return requestTemplate
 
-def findValidUrls(words, URLTemplate, requestTemplate):
+def findValidUrls(words, URLTemplate, requestTemplate, validCodes):
     validURLs = []
     for word in words:
         currURL = URLTemplate[0] + word + URLTemplate[1]
 
-        if debug: print(f"Trying {word}: {currURL}")
+        #if debug: print(f"Trying {word}: {currURL}")
 
         try:
             request = requestTemplate
             request.full_url = currURL
-            
+
             response = urllib.request.urlopen(request)
 
-            validURLs.append([response.getcode(), currURL])
+            # -mc feature
+            if debug: print(f"code: {response.getcode()}")
+            if response.getcode() in validCodes:
+                validURLs.append([response.getcode(), currURL])
+
         except urllib.error.HTTPError as e:
             pass
     return validURLs

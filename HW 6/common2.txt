@@ -1,7 +1,3 @@
-.bash_history
-.bashrc
-.cache
-.config
-.cvs
-class
-development.log
+employers
+.gitignore
+~admin
