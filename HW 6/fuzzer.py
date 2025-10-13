@@ -2,10 +2,9 @@
 
 import args, urllib.request, uvicorn
 
-debug = True
+debug = False
 
 def fuzz(args):
-    print(args)
     """Fuzz a target URL with the command-line arguments specified by ``args``."""
     URLTemplate = givenBaseURLreturnURLTemplate(args.url)
     words = givenFileReturnWords(args.wordlist)
@@ -26,15 +25,15 @@ def givenFileReturnWords(fileName):
 
 def givenBaseURLreturnURLTemplate(baseURL):
     i = baseURL.find("FUZZ")
-    return [baseURL[0:i-1], baseURL[i+4:]]
+    return [baseURL[0:i], baseURL[i+4:]]
 
 def findValidUrls(words, URLTemplate):
     validURLs = []
     for word in words:
-
-        if debug: print(f"Trying {word}.")
-
         currURL = URLTemplate[0] + word + URLTemplate[1]
+
+        if debug: print(f"Trying {word}: {currURL}")
+
         try:
             response = urllib.request.urlopen(currURL)
             validURLs.append([response.getcode(), currURL])
