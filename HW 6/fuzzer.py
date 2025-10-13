@@ -6,9 +6,9 @@ debug = False
 
 def fuzz(args):
     """Fuzz a target URL with the command-line arguments specified by ``args``."""
-    URLTemplate = givenBaseURLreturnURLTemplate(args.url)
-    words = givenFileReturnWords(args.wordlist)
-    
+    words = createWordList(args.wordlist)
+
+    # --extensions feature
     if args.extensions:
         toAdd = []
         for word in words:
@@ -16,24 +16,41 @@ def fuzz(args):
                 toAdd.append(word + extension)
         words += toAdd
 
-    httpMethod = 'GET'
-    if args.method: httpMethod = args.method.upper()
-
-    validURLs = findValidUrls(words, URLTemplate, httpMethod)
+    URLTemplate = createURLTemplate(args.url)
+    requestTemplate = createRequestTemplate(args)
+    validURLs = findValidUrls(words, URLTemplate, requestTemplate)
 
     for i in validURLs:
         print(f"{i[0]} {i[1]}")
 
-def givenFileReturnWords(fileName):
+def createWordList(fileName):
     with open(fileName, "r") as f: 
         words = f.read().strip().split("\n")
     return words
 
-def givenBaseURLreturnURLTemplate(baseURL):
+def createURLTemplate(baseURL):
     i = baseURL.find("FUZZ")
     return [baseURL[0:i], baseURL[i+4:]]
 
-def findValidUrls(words, URLTemplate, httpMethod):
+def createRequestTemplate(args):
+    requestTemplate = urllib.request.Request(args.url)
+
+    # --methods feature
+    httpMethod = 'GET'
+    if args.method: requestTemplate.method = args.method.upper()
+
+    # --header feature
+    if args.headers: 
+        for header in args.headers:
+            header = header.split(":")
+            requestTemplate.add_header(header[0], header[1])
+    
+    # --data feature
+    if args.data: requestTemplate.data = args.data.encode("utf-8")
+
+    return requestTemplate
+
+def findValidUrls(words, URLTemplate, requestTemplate):
     validURLs = []
     for word in words:
         currURL = URLTemplate[0] + word + URLTemplate[1]
@@ -41,8 +58,8 @@ def findValidUrls(words, URLTemplate, httpMethod):
         if debug: print(f"Trying {word}: {currURL}")
 
         try:
-            request = urllib.request.Request(currURL)
-            request.get_method = lambda: httpMethod
+            request = requestTemplate
+            request.full_url = currURL
             
             response = urllib.request.urlopen(request)
 

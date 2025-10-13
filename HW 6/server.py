@@ -8,6 +8,7 @@
 # The URLs to respond with a 200 to
 urls = [ '/employers', '/.gitignore', '/~admin', '/alerts.html' ]
 
+
 async def app(scope, receive, send):
     assert scope['type'] == 'http'
     await send({
@@ -23,3 +24,21 @@ async def app(scope, receive, send):
     })
 
     print(f"HTTP method: {scope['method']}")
+    print(f"headers: {scope['headers']}")
+    body = await read_body(receive)
+    print(f"data: {body}")
+
+
+async def read_body(receive):
+    """
+    Read and return the entire body from an incoming ASGI message.
+    """
+    body = b''
+    more_body = True
+
+    while more_body:
+        message = await receive()
+        body += message.get('body', b'')
+        more_body = message.get('more_body', False)
+
+    return body
