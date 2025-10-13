@@ -8,12 +8,15 @@ def fuzz(args):
     """Fuzz a target URL with the command-line arguments specified by ``args``."""
     URLTemplate = givenBaseURLreturnURLTemplate(args.url)
     words = givenFileReturnWords(args.wordlist)
-    validURLs = findValidUrls(words, URLTemplate)
-
+    
     if args.extensions:
+        toAdd = []
         for word in words:
             for extension in args.extensions:
-                words.append(word + "." + extension)
+                toAdd.append(word + extension)
+        words += toAdd
+
+    validURLs = findValidUrls(words, URLTemplate)
 
     for i in validURLs:
         print(f"{i[0]} {i[1]}")
