@@ -10,6 +10,9 @@ urls = [ '/employers', '/.gitignore', '/~admin', '/alerts.html', '/FUZZ' ]
 
 
 async def app(scope, receive, send):
+    body = await read_body(receive)
+    print(f"data: {body.decode('utf-8')}")
+    
     print(f"scope['path']: {scope['path']}")
 
     assert scope['type'] == 'http'
@@ -17,7 +20,7 @@ async def app(scope, receive, send):
         
 
         'type': 'http.response.start',
-        'status': 301 if scope['path'] in urls else 404,
+        'status': 200 if scope['path'] in urls else 404,
         'headers': [
             [b'content-type', b'text/plain'],
         ],
@@ -29,8 +32,7 @@ async def app(scope, receive, send):
 
     print(f"HTTP method: {scope['method']}")
     print(f"headers: {scope['headers']}")
-    body = await read_body(receive)
-    print(f"data: {body.decode('utf-8')}")
+
 
 
 async def read_body(receive):
