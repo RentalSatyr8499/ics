@@ -2,7 +2,7 @@
 
 import args, urllib.request
 
-debug = True
+debug = False
 
 def fuzz(args):
     """Fuzz a target URL with the command-line arguments specified by ``args``."""
@@ -60,11 +60,14 @@ def createRequestTemplate(args):
 
 def findValidUrls(words, URLTemplate, requestTemplate, validCodes):
     validURLs = []
+
+    if debug: print(f"validCodes: {validCodes}")
+
     for word in words:
         currURL = URLTemplate[0] + word + URLTemplate[1]
 
         #if debug: print(f"Trying {word}: {currURL}")
-
+        
         try:
             request = requestTemplate
             request.full_url = currURL
@@ -76,8 +79,9 @@ def findValidUrls(words, URLTemplate, requestTemplate, validCodes):
             if response.getcode() in validCodes:
                 validURLs.append([response.getcode(), currURL])
 
-        except urllib.error.HTTPError as e:
-            pass
+        except urllib.error.HTTPError as e: # ensures that we still identify valid urls even if their response packet has no location header
+            if e.code in validCodes: validURLs.append([e.code, currURL])
+
     return validURLs
 
 

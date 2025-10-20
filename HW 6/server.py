@@ -6,14 +6,18 @@
 # uvicorn server:app --reload --port 5000
 
 # The URLs to respond with a 200 to
-urls = [ '/employers', '/.gitignore', '/~admin', '/alerts.html' ]
+urls = [ '/employers', '/.gitignore', '/~admin', '/alerts.html', '/FUZZ' ]
 
 
 async def app(scope, receive, send):
+    print(f"scope['path']: {scope['path']}")
+
     assert scope['type'] == 'http'
     await send({
+        
+
         'type': 'http.response.start',
-        'status': 401 if scope['path'] in urls else 404,
+        'status': 301 if scope['path'] in urls else 404,
         'headers': [
             [b'content-type', b'text/plain'],
         ],
