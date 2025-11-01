@@ -51,9 +51,6 @@ def fund(receiverTag, amount, statementFile):
     with open(statementFile, 'a') as file:
         file.write(statement)
     
-    with open("mempool.txt", 'a') as mempool:
-        mempool.write(f"my_heart transferred {amount} to {receiverTag} on {date}\n")
-
     print(f"Funded wallet {receiverTag} with {amount} yeevacoin on {date}")
 
 # transfer functionality
@@ -110,13 +107,17 @@ def verify(senderWalletFile, statementFile):
     with open(statementFile, 'r') as file:
         lines = file.readlines()
         statement = ''.join(lines[:-2]) # account for newline before signature
+
+        if (lines[0].strip()=="From: my_heart"):
+            with open("mempool.txt", 'a') as mempool:
+                mempool.write(f"my_heart transferred {lines[2][8:].strip()} to {lines[1][4:].strip()} on {lines[3][6:].strip()}\n")
+            print("Any funding request (i.e., from my_heart) is considered valid; written to the mempool")
+            return
         signature = bytes.fromhex(lines[-1].strip())
 
     senderPublicKey = read_key_from_file(senderWalletFile, 'PUBLIC')
     try:
         rsa.verify(statement.encode('utf-8'), signature, senderPublicKey)
-
-
     except rsa.VerificationError:
         print(f"The transaction in file {statementFile} with wallet {senderWalletFile} is not valid.")
         return False
@@ -169,6 +170,29 @@ def mine(difficulty):
 
     print(f"Mempool transactions moved to block_{get_next_block_number()}.txt and mined with difficulty {difficulty} and nonce {nonce}")
 
+# validate functionality
+def validate_block(currBlockFile, currBlockNum):
+    lines = currBlockFile.readlines()
+    previous_hash = hashlib.sha256(lines[0].encode('utf-8')).hexdigest()
+    
+    with open(f'block_{currBlockNum-1}.txt', 'r') as prevBlockFile:
+        prev_lines = prevBlockFile.readlines()
+        expected_hash = hashlib.sha256(prev_lines[0].encode('utf-8')).hexdigest()
+    
+    return previous_hash == expected_hash
+
+def validate():
+    currBlockNum = 1
+    while True:
+        try:
+            with open(f'block_{currBlockNum}.txt', 'r') as currBlockFile:
+                if validate_block(currBlockFile, currBlockNum) is False:
+                    print(False)
+                    return
+        except FileNotFoundError:
+            print(True)
+        currBlockNum += 1
+    
 if sys.argv:
     match sys.argv[1]:
         case "name": print(COIN_NAME)
@@ -183,5 +207,6 @@ if sys.argv:
         case "balance": print(balance(sys.argv[2]))
         case "verify": verify(sys.argv[2], sys.argv[3])
         case "mine": mine(int(sys.argv[2]))
+        case "validate": validate()
         case _:
             pass
