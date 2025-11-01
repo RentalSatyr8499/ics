@@ -2,7 +2,7 @@ import sys, rsa, hashlib
 from datetime import datetime
 
 # the time zone is hardcoded to avoid unecessary dependcencies
-# how to verify that statements aren't added to mempool multiple times?
+# how to verify that statements aren't added to mempool multiple times? file name based verification
 
 COIN_NAME = "yeevacoin"
 GENESIS_BLOCK = "The virtues are natural adjuncts of the pleasant life and the pleasant life is inseparable from them."
@@ -80,7 +80,6 @@ def parse_transaction_line(line, walletTag):
     elif receiver == walletTag:
         return amount
     return 0
-
 def scan_block(walletTag, block):
     balance = 0
     with open(block, 'r') as currBlockFile:
@@ -117,7 +116,7 @@ def verify(senderWalletFile, statementFile):
     try:
         rsa.verify(statement.encode('utf-8'), signature, senderPublicKey)
 
-        
+
     except rsa.VerificationError:
         print(f"The transaction in file {statementFile} with wallet {senderWalletFile} is not valid.")
         return False
@@ -126,6 +125,49 @@ def verify(senderWalletFile, statementFile):
         mempool.write(f"{lines[0][6:].strip()} transferred {lines[2][8:].strip()} to {lines[1][4:].strip()} on {lines[3][6:].strip()}\n")
     
     print(f"The transaction in file {statementFile} with wallet {senderWalletFile} is valid, and was written to the mempool")
+
+# mine functionality
+def get_next_block_number():
+    currBlockNum = 0
+    while True:
+        try:
+            with open(f'block_{currBlockNum}.txt', 'r'):
+                currBlockNum += 1
+        except FileNotFoundError:
+            break
+    return currBlockNum
+def get_previous_block_hash():
+    with open(f"block_{get_next_block_number()-1}.txt", 'r') as prevBlockFile:
+        lines = prevBlockFile.readlines()
+        previous_hash = hashlib.sha256(lines[0].encode('utf-8')).hexdigest()
+    return previous_hash
+def create_new_block_content():
+    block = f"{get_previous_block_hash()}\n\n"
+    with open("mempool.txt", 'r') as mempool:
+        transactions = mempool.readlines()
+    for transaction in transactions:
+        block += transaction
+    block += "\n\nnonce: 0"
+    return block
+def hashOf(blockContent):
+    return hashlib.sha256(blockContent.encode('utf-8')).hexdigest()
+
+def mine(difficulty):
+    # assume that a collision will be forced before we need to scramble transaction statement orders.
+
+    block = create_new_block_content()
+    
+    while hashOf(block).startswith('0' * difficulty) is False:
+        nonce = int(block.split("nonce: ")[1])
+        nonce += 1
+        block = block.split("nonce: ")[0] + f"nonce: {nonce}\n"
+
+    with open(f"block_{get_next_block_number()}.txt", 'w') as newBlockFile:
+        newBlockFile.write(block)
+    with open("mempool.txt", 'w') as mempool:
+        mempool.write("")
+
+    print(f"Mempool transactions moved to block_{get_next_block_number()}.txt and mined with difficulty {difficulty} and nonce {nonce}")
 
 if sys.argv:
     match sys.argv[1]:
@@ -140,5 +182,6 @@ if sys.argv:
         case "transfer": transfer(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
         case "balance": print(balance(sys.argv[2]))
         case "verify": verify(sys.argv[2], sys.argv[3])
+        case "mine": mine(int(sys.argv[2]))
         case _:
             pass
