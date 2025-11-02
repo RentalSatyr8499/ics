@@ -172,8 +172,7 @@ def mine(difficulty):
 
 # validate functionality
 def validate_block(currBlockFile, currBlockNum):
-    lines = currBlockFile.readlines()
-    previous_hash = hashlib.sha256(lines[0].encode('utf-8')).hexdigest()
+    previous_hash = currBlockFile.readlines()[0].strip()
     
     with open(f'block_{currBlockNum-1}.txt', 'r') as prevBlockFile:
         prev_lines = prevBlockFile.readlines()
@@ -186,11 +185,14 @@ def validate():
     while True:
         try:
             with open(f'block_{currBlockNum}.txt', 'r') as currBlockFile:
+                print(f"Validating block_{currBlockNum}.txt...")
                 if validate_block(currBlockFile, currBlockNum) is False:
+                    print(f"Block_{currBlockNum}.txt is invalid!")
                     print(False)
                     return
         except FileNotFoundError:
             print(True)
+            return
         currBlockNum += 1
     
 if sys.argv:
