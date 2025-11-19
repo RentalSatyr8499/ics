@@ -1,9 +1,10 @@
+global print
 section .text
 mysyscall:
-    jmp afterString
+    jmp print
 string:
     db "Not a virus", 0x0a
-afterString:  
+print:  
     mov eax, 1        ; syscall function (sys_write)
     mov edi, 1        ; print to stdout
     lea esi, [string] ; buffer to print
