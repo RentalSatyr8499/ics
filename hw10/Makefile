@@ -3,4 +3,4 @@ all:
 	gcc -c part1.c -m64 -no-pie
 	gcc -o part1 part1.o print.o -m64 -no-pie
 clean:
-	rm -f *.o part1 test1mod
+	rm -f *.o part1 test1mod testAmod
