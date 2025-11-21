@@ -12,7 +12,6 @@ def findTextSection(bin_data):
     for byte in entry_bytes[1:3]:
         text_addr = (text_addr << 8) | byte
     return text_addr
-
 def isFullCommand(cmd):
     # 1. nop
     if len(cmd) == 1 and cmd[0] == 0x90:
@@ -98,14 +97,35 @@ def writePayloadAtNops(bin_data, write_loc, epilogue, payload):
 
     bin_data[write_loc:write_loc+len(toInject)] = toInject
 def writeTrickyJump(bin_data, ret_loc, epilogue_len, jumpTo):
+    """
+    Patch the epilogue with a push <virtual address> + nop padding.
+    jumpTo is given as a file offset; we convert it to a virtual address
+    using the ELF entry point at 0x18-0x1b.
+    """
+
+    # Read entry point (little-endian 4 bytes)
+    entry_bytes = bin_data[0x18:0x1c]
+    text_base = (entry_bytes[3] << 24) | (entry_bytes[2] << 16) | (entry_bytes[1] << 8) | entry_bytes[0]
+
+    # File offset is the low half of text_base
+    text_file_offset = text_base & 0xFFFF
+
+    # Convert file offset to virtual address
+    virt_addr = text_base + (jumpTo - text_file_offset)
+
+    # Build push imm32 (little-endian)
     patch = [
         0x68,
-        (jumpTo >> 0) & 0xFF,
-        (jumpTo >> 8) & 0xFF,
-        (jumpTo >> 16) & 0xFF,
-        (jumpTo >> 24) & 0xFF,
+        (virt_addr >> 0) & 0xFF,
+        (virt_addr >> 8) & 0xFF,
+        (virt_addr >> 16) & 0xFF,
+        (virt_addr >> 24) & 0xFF,
     ]
-    patch += [0x90] * (epilogue_len - len(patch)) # nop padding
+
+    # Pad with nops to fill epilogue length
+    patch += [0x90] * (epilogue_len - len(patch))
+
+    # Overwrite epilogue
     bin_data[ret_loc - epilogue_len: ret_loc] = bytes(patch)
 
 
